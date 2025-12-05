@@ -7,9 +7,9 @@ samlet_data = respons_data.json()
 solopgang_data = samlet_data['results']['civil_twilight_begin']
 solnedgang_data = samlet_data['results']['civil_twilight_end']
 
-def tid_til_decimal(time_str):
-    time_part, ampm = time_str.split()
-    t, m, s = map(int, time_part.split(":"))
+def tid_til_decimal(tid_str):
+    tid_split, ampm = tid_str.split()
+    t, m, s = map(int, tid_split.split(":"))
 
     if ampm == "PM" and t != 12:
         t += 12
@@ -18,9 +18,10 @@ def tid_til_decimal(time_str):
 
     return t + m / 60  # Dette ignorere sekunder, da vi ikke skal bruge dem til noget.
 
-# Convert API times
+# Konverter API tider
 solopgang_float = tid_til_decimal(solopgang_data)
 solnedgang_float = tid_til_decimal(solnedgang_data)
 
 print("Solopgang decimal:", solopgang_float)
 print("Solnedgang decimal:", solnedgang_float)
+
