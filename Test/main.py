@@ -1,16 +1,3 @@
-# Dette script kører efter boot.py.
-# Her antager vi, at WiFi allerede er forbundet korrekt ved opstart.
-
-# Flow for enheden:
-# 1. Connect til ThingsBoard via MQTT
-# 2. Send GPS-data (telemetry)
-# 3. Bed om twilight-data fra ThingsBoard (client attributes)
-# 4. Vent på MQTT-svar og gem værdierne
-# 5. Gå i deep sleep i 10 minutter
-
-# Når enheden vågner --> boot.py kører --> main.py starter forfra.
-
-
 import time
 import network
 import machine
