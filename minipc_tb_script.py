@@ -2,12 +2,11 @@
 import requests
 
 # Konfiguration
-# Hvis scriptet kører på samme maskine som ThingsBoard:
+# Scriptet kører på samme maskine som ThingsBoard:
 TB_URL = "http://localhost:8080"
-# Ellers fx: TB_URL = "http://10.20.0.4:8080"
 
 # Device access token (SAMME som på ESP32 / ThingsBoard device)
-TB_TOKEN = "DIN_DEVICE_TOKEN_HER"
+TB_TOKEN = "DEVICE_TOKEN_HER"
 
 SUN_API_URL = "https://api.sunrise-sunset.org/json"
 
