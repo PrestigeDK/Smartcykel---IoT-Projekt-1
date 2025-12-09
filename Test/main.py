@@ -38,7 +38,7 @@ def main():
     # WiFi bør være forbundet af boot.py
     wlan = network.WLAN(network.STA_IF)
     if not wlan.isconnected():
-        print("[WiFi] Fejl: WiFi ikke forbundet selvom boot.py burde have håndteret det.")
+        print("[WiFi] Fejl: WiFi ikke forbundet.")
         return
 
     print("[WiFi] Aktiv, IP =", wlan.ifconfig()[0])

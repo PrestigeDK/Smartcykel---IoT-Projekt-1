@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
 import requests
 
+# Konfiguration
+# Hvis scriptet kører på samme maskine som ThingsBoard:
 TB_URL = "http://localhost:8080"
-TB_TOKEN = ""
+# Ellers fx: TB_URL = "http://10.20.0.4:8080"
+
+# Device access token (SAMME som på ESP32 / ThingsBoard device)
+TB_TOKEN = "DIN_DEVICE_TOKEN_HER"
+
 SUN_API_URL = "https://api.sunrise-sunset.org/json"
 
 
-# Funktion som laver tid fra api'en om til decimal, så vi bedre kan regne med det
-def tid_til_decimal(tid_str):
+def tid_til_decimal(tid_str: str) -> float:
+    """
+    Konverterer tid i formatet 'TT:MM:SS AM/PM' til decimal-timer.
+    Eksempel: '6:39:00 AM' -> 6.65
+    """
     tid_split, ampm = tid_str.split()
     t, m, s = map(int, tid_split.split(":"))
 
@@ -16,44 +25,48 @@ def tid_til_decimal(tid_str):
     if ampm == "AM" and t == 12:
         t = 0
 
-    return t + m / 60  # Ignorer sekunder, da vi ikke skal bruge dem
+    return t + m / 60.0  # sekunder ignoreres
 
 
-def get_lat_lng_from_tb(): # Henter lat & lng fra device client attributes.
-    url = f"{TB_URL}/api/v1/{TB_TOKEN}/attributes?sharedKeys=lat,lng"
+def get_lat_lng_from_tb():
+    """
+    Henter lat/lng fra ThingsBoard client attributes.
+    Forventer at ESP32 tidligere har sendt 'lat' og 'lng'.
+    """
+    url = f"{TB_URL}/api/v1/{TB_TOKEN}/attributes?clientKeys=lat,lng"
     r = requests.get(url, timeout=10)
     r.raise_for_status()
+
     data = r.json()
+    client = data.get("client", {})
 
-    shared = data.get("shared", {})
-    if "lat" not in shared or "lng" not in shared:
-        raise RuntimeError("lat/lng ikke fundet i shared attributes")
+    if "lat" not in client or "lng" not in client:
+        raise RuntimeError("Fejl: lat/lng findes ikke i client attributes.")
 
-    lat = float(shared["lat"])
-    lng = float(shared["lng"])
-    return lat, lng
+    return float(client["lat"]), float(client["lng"])
 
 
-def get_sun_times(lat, lng):
+def hent_sun_times(lat: float, lng: float):
+    """
+    Kalder sunrise-sunset API'et og henter civil_twilight_begin/end.
+    """
     params = {
         "lat": lat,
         "lng": lng,
-        "formatted": 1  # AM/PM format, passer til tid_til_decimal
+        "formatted": 1  # giver '6:39:00 AM' format
     }
     r = requests.get(SUN_API_URL, params=params, timeout=10)
     r.raise_for_status()
+
     data = r.json()
-
-    if data.get("status") != "OK":
-        raise RuntimeError(f"Sun API error: {data.get('status')}")
-
     res = data["results"]
-    solopgang = res["civil_twilight_begin"]
-    solnedgang = res["civil_twilight_end"]
-    return solopgang, solnedgang
+    return res["civil_twilight_begin"], res["civil_twilight_end"]
 
 
-def send_to_thingsboard(begin_dec, end_dec): # Gemmer resultaterne som shared attributes, så enheden kan læse dem som "system data"
+def send_to_thingsboard(begin_dec: float, end_dec: float):
+    """
+    Sender twilight-tiderne tilbage til ThingsBoard som client attributes.
+    """
     url = f"{TB_URL}/api/v1/{TB_TOKEN}/attributes"
     payload = {
         "civil_twilight_begin_decimal": begin_dec,
@@ -65,22 +78,29 @@ def send_to_thingsboard(begin_dec, end_dec): # Gemmer resultaterne som shared at
 
 
 def main():
-    print("Henter lat/lng fra ThingsBoard...")
+    print("=== Twilight updater start ===")
+
+    # 1) Hent GPS fra ThingsBoard
+    print("Henter GPS koordinater fra ThingsBoard...")
     lat, lng = get_lat_lng_from_tb()
-    print(f"Lat: {lat}, Lng: {lng}")
+    print(f"Lat: {lat} | Lng: {lng}")
 
-    print("Henter sol tider fra API...")
-    solopgang_str, solnedgang_str = get_sun_times(lat, lng)
-    print("API tider:", solopgang_str, solnedgang_str)
+    # 2) Hent civil twilight fra API
+    print("Henter civil twilight tider fra API...")
+    solop, solned = hent_sun_times(lat, lng)
+    print("Rå API:", solop, "/", solned)
 
-    # Bruger vores konvertering
-    solopgang_dec = tid_til_decimal(solopgang_str)
-    solnedgang_dec = tid_til_decimal(solnedgang_str)
-    print("Decimal:", solopgang_dec, solnedgang_dec)
+    # 3) Konverter til decimal-tid
+    solop_dec = tid_til_decimal(solop)
+    solned_dec = tid_til_decimal(solned)
+    print(f"Decimal: begin={solop_dec:.3f}  end={solned_dec:.3f}")
 
-    print("Sender til ThingsBoard (shared attributes)...")
-    resp = send_to_thingsboard(solopgang_dec, solnedgang_dec)
-    print("Færdig:", resp)
+    # 4) Send til ThingsBoard
+    print("Sender twilight-decimaler til ThingsBoard...")
+    resp = send_to_thingsboard(solop_dec, solned_dec)
+    print("Success:", resp)
+
+    print("=== Twilight updater færdig ===")
 
 
 if __name__ == "__main__":
