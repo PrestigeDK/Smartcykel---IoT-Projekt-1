@@ -31,7 +31,7 @@ def attributes_callback(payload):
     if "civil_twilight_end_decimal" in client_attrs:
         twilight["end"] = round(client_attrs["civil_twilight_end_decimal"], 2)
 
-    print(f"[TB] Twilight → Begin: {twilight['begin']}  End: {twilight['end']}")
+    print(f"[TB] Twilight --> Begin: {twilight['begin']}  End: {twilight['end']}")
 
 
 def main():
@@ -41,13 +41,13 @@ def main():
         print("[WiFi] Fejl: WiFi ikke forbundet selvom boot.py burde have håndteret det.")
         return
 
-    print("[WiFi] Aktiv ✔  IP =", wlan.ifconfig()[0])
+    print("[WiFi] Aktiv, IP =", wlan.ifconfig()[0])
 
     # 1. Forbind til ThingsBoard via MQTT
     print("[TB] Forbinder til ThingsBoard...")
     client = TBDeviceMqttClient(host=secrets.SERVER_IP_ADDRESS,port=1883,access_token=secrets.ACCESS_TOKEN)
     client.connect()
-    print("[TB] Forbundet ✔")
+    print("[TB] Forbundet")
 
     # 2. Send GPS-data til ThingsBoard (gps data er hardcoded for nu)
     gps_data = {"lat": 55.6761, "lng": 12.5683}
