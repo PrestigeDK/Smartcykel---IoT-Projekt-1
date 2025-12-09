@@ -23,7 +23,7 @@ def tid_til_decimal(tid_str: str) -> float:
         t += 12
     if ampm == "AM" and t == 12:
         t = 0
-
+        
     return t + m / 60.0  # sekunder ignoreres
 
 
