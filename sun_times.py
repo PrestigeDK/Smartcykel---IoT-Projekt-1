@@ -6,7 +6,7 @@ import requests
 TB_URL = "http://localhost:8080"
 
 # Device access token (SAMME som på ESP32 / ThingsBoard device)
-TB_TOKEN = "DEVICE_TOKEN_HER"
+TB_TOKEN = "OKcAjXshr9Ha82R4sJUM"
 
 SUN_API_URL = "https://api.sunrise-sunset.org/json"
 
