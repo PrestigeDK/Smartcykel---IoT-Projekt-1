@@ -12,25 +12,29 @@ Dette dokument beskriver, hvordan jeg satte hele vores IoT-kæde op, så ESP32-e
 
 
 
-1\. Jeg åbnede ThingsBoard i browseren via vores mini-pc:
-
-&nbsp;  http://mini-pc-ip:8080  (fx 10.20.0.4)
+1. Gå til /usr/share/thingsboard for at starte thingsboard, sudo service thingsboard start
 
 
 
-2\. Jeg gik til Devices og fandt det device, som vores ESP32 skal bruge.
+2\. Jeg åbnede ThingsBoard i browseren via vores mini-pc:
+
+   http://localhost:8080  (eller 10.20.0.4:8080 på en anden pc)
 
 
 
-3\. Under Device Credentials hentede jeg “Device Access Token”.  
-
-&nbsp;  Det token bruges både af ESP’en og af Ubuntu-scriptet.
+3\. Jeg gik til Devices og fandt det device, som vores ESP32 skal bruge.
 
 
 
-4\. Jeg sikrede, at ESP’en allerede havde sendt lat/lng som client attributes,
+4\. Under Device Credentials hentede jeg “Device Access Token”.
 
-&nbsp;  så Python-scriptet kan hente dem senere.
+   Det token bruges både af ESP’en og af Ubuntu-scriptet.
+
+
+
+5\. Jeg sikrede, at ESP’en allerede havde sendt lat/lng som client attributes,
+
+   så Python-scriptet kan hente dem senere. Hvis ikke, kan man ændre i scriptet og manuelt indsætte værdier i 'shared' attributes. I scriptet vil man så ændre alle 'client' til 'shared'. Husk også at tjekke url'en.
 
 \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
@@ -42,37 +46,37 @@ Dette dokument beskriver, hvordan jeg satte hele vores IoT-kæde op, så ESP32-e
 
 1\. Jeg lavede en mappe til vores scripts:
 
-&nbsp;  mkdir -p /team3gruppea/desktop/tb-scripts
+   mkdir -p /team3gruppea/tb-scripts
 
 
 
-2\. Jeg gemte filen “sun\_times.py” i denne mappe.
+2\. Jeg gemte filen “sun\_times.py” i denne mappe, sudo nano sun\_times.py. Samt jeg lagde scriptet ind.
 
 
 
 3\. Jeg gjorde scriptet eksekverbart:
 
-&nbsp;  chmod +x sun\_times.py
+   chmod +x sun\_times.py
 
 
 
 4\. Scriptet gør følgende:
 
-&nbsp;  - Henter lat/lng fra ThingsBoard (client attributes)
+   - Henter lat/lng fra ThingsBoard (client attributes)
 
-&nbsp;  - Kalder sunrise-sunset API
+   - Kalder sunrise-sunset API
 
-&nbsp;  - Konverterer civil twilight begin/end til decimal-timer
+   - Konverterer civil twilight begin/end til decimal-timer
 
-&nbsp;  - Sender værdierne tilbage til ThingsBoard som client attributes
+   - Sender værdierne tilbage til ThingsBoard som client attributes
 
 
 
 5\. Jeg testede scriptet manuelt:
 
-&nbsp;  ./sun\_times.py
+   ./sun\_times.py
 
-&nbsp;  Her tjekkede jeg, at værdierne dukkede op i ThingsBoard, hvilket de gjorde.
+   Her tjekkede jeg, at værdierne dukkede op i ThingsBoard, hvilket de gjorde.
 
 \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
@@ -84,7 +88,7 @@ Dette dokument beskriver, hvordan jeg satte hele vores IoT-kæde op, så ESP32-e
 
 1\. Jeg åbnede crontab:
 
-&nbsp;  crontab -e
+   crontab -e
 
 
 
@@ -92,19 +96,19 @@ Dette dokument beskriver, hvordan jeg satte hele vores IoT-kæde op, så ESP32-e
 
 
 
-&nbsp;  \*/10 \* \* \* \* /usr/bin/env python3 /team3gruppea/desktop/tb-scripts/sun\_times.py >> /team3gruppea/desktop/sun\_times.log 2>\&1
+   \*/10 \* \* \* \* /usr/bin/env python3 /team3gruppea/tb-scripts/sun\_times.py >> /team3gruppea/sun\_times.log 2>\&1
 
 
 
 3\. Jeg gemte filen og tjekkede cron-status:
 
-&nbsp;  systemctl status cron
+   systemctl status cron
 
 
 
 4\. Resultatet:
 
-&nbsp;  Mini-pc’en kører nu automatisk twilight-beregningen med faste intervaller.
+   Mini-pc’en kører nu automatisk twilight-beregningen med faste intervaller.
 
 \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
@@ -116,45 +120,45 @@ Dette dokument beskriver, hvordan jeg satte hele vores IoT-kæde op, så ESP32-e
 
 1\. I ESP32’s boot.py sørgede jeg for, at enheden forbinder til WiFi automatisk
 
-&nbsp;  hver gang den starter. Det betyder, at main.py kan antage, at WiFi allerede virker.
+   hver gang den starter. Det betyder, at main.py kan antage, at WiFi allerede virker.
 
 
 
 2\. Jeg sørgede for, at secrets.py indeholder:
 
-&nbsp;  - SSID
+   - SSID
 
-&nbsp;  - PASSWORD
+   - PASSWORD
 
-&nbsp;  - SERVER\_IP\_ADDRESS (mini pc’ens IP)
+   - SERVER\_IP\_ADDRESS (mini pc’ens IP)
 
-&nbsp;  - ACCESS\_TOKEN (samme token som Python scriptet bruger)
+   - ACCESS\_TOKEN (samme token som Python scriptet bruger)
 
 
 
 3\. I main.py skrev jeg logikken:
 
-&nbsp;  - Forbind til ThingsBoard via MQTT
+   - Forbind til ThingsBoard via MQTT
 
-&nbsp;  - Send GPS (telemetry)
+   - Send GPS (telemetry)
 
-&nbsp;  - Request twilight attributes via request\_attributes()
+   - Request twilight attributes via request\_attributes()
 
-&nbsp;  - Vent på MQTT-svar i op til 10 sekunder
+   - Vent på MQTT-svar i op til 10 sekunder
 
-&nbsp;  - Vis output (kun korte beskeder)
+   - Vis output (kun korte beskeder)
 
-&nbsp;  - Gå i deep sleep i 10 minutter
+   - Gå i deep sleep i 10 minutter
 
 
 
 4\. Når ESP’en vågner igen:
 
-&nbsp;  - boot.py kører automatisk WiFi
+   - boot.py kører automatisk WiFi
 
-&nbsp;  - main.py henter twilight og sender GPS igen
+   - main.py henter twilight og sender GPS igen
 
-&nbsp;  - Enheden går tilbage i deep sleep
+   - Enheden går tilbage i deep sleep
 
 \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
@@ -170,33 +174,33 @@ For at sikre alt virkede, gjorde jeg følgende:
 
 1\. Startede ESP32 og så i shell:
 
-&nbsp;  - WiFi OK
+   - WiFi OK
 
-&nbsp;  - ThingsBoard connected
+   - ThingsBoard connected
 
-&nbsp;  - GPS sendt
+   - GPS sendt
 
-&nbsp;  - Twilight hentet
+   - Twilight hentet
 
-&nbsp;  - Deep sleep besked
+   - Deep sleep besked
 
 
 
 2\. På ThingsBoard:
 
-&nbsp;  - Under telemetry fandt jeg lat/lng
+   - Under telemetry fandt jeg lat/lng
 
-&nbsp;  - Under client attributes så jeg twilight-tiderne opdatere
+   - Under client attributes så jeg twilight-tiderne opdatere
 
 
 
 3\. På Linux mini PC:
 
-&nbsp;  - Jeg kiggede i loggen:
+   - Jeg kiggede i loggen:
 
-&nbsp;    tail -f ~/sun\_times.log
+     tail -f ~/sun\_times.log
 
-&nbsp;  - Her kunne jeg se, hvis noget gik galt.
+   - Her kunne jeg se, hvis noget gik galt.
 
 \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 

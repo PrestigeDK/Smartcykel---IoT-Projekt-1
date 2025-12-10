@@ -41,11 +41,11 @@ def main():
         print("[WiFi] Fejl: WiFi ikke forbundet.")
         return
 
-    print("[WiFi] Aktiv, IP =", wlan.ifconfig()[0])
+    print("[WiFi] Aktiv. IP =", wlan.ifconfig()[0])
 
     # 1. Forbind til ThingsBoard via MQTT
     print("[TB] Forbinder til ThingsBoard...")
-    client = TBDeviceMqttClient(host=secrets.SERVER_IP_ADDRESS,port=1883,access_token=secrets.ACCESS_TOKEN)
+    client = TBDeviceMqttClient(host=secrets.SERVER_IP_ADDRESS,port=1886,access_token=secrets.ACCESS_TOKEN)
     client.connect()
     print("[TB] Forbundet")
 
