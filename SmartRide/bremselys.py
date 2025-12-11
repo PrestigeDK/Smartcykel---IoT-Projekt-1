@@ -15,6 +15,7 @@ class BremselysStyring:
         self.red_led = PWM(Pin(12))
         self.red_led_freq = 70
         self.red_led_duty = 0
+        self.red_led.duty(self.red_led_duty)
 
         #Tærskel for bremsing (G-force)
         self.neg_acc_threshold = -0.5
@@ -36,6 +37,7 @@ class BremselysStyring:
     
     # Funktion der tjekker om vi bremser
     def braking(self, ax):
+        #print(ax, self.neg_acc_threshold)
         return ax < self.neg_acc_threshold
     
     # Funktion som tjekker om det er dag/nat
@@ -54,9 +56,10 @@ class BremselysStyring:
     # Funktion som vælger farve ift. om vi bremser og om det er dag/nat
     def choose_duty(self, day, braking):
         r, g, b = (0, 0, 0)
+        print(day, braking)
         # Hvis ingen data på dag, så sætter vi stadig lyset til svagt
         if day is None:
-            self.red_led_duty = 256
+            self.red_led_duty = 2
         # Hvis det er dag og vi ikke bremser, så er lyset slukket
         elif day == True and not braking:
             self.red_led_duty = 0
@@ -65,11 +68,11 @@ class BremselysStyring:
             self.red_led_duty = 1023
         # Hvis det ikke er dag og vi ikke bremser, sætter vi lyset til svagt
         elif day == False and not braking:
-            self.red_led_duty = 256
+            self.red_led_duty = 2
         # Hvis det ikke er dag og vi bresmer, sætter vi lyset til kraftigt
         elif day == False and braking == True:
             self.red_led_duty = 1023
-    
+        print('RED DUTY', self.red_led_duty)
         return (self.red_led_duty)
     
     # Funktion som styrer logik og bruger tidligere funktioner i klassen
@@ -78,5 +81,7 @@ class BremselysStyring:
         braking = self.braking(ax)
         day = self.day_or_night()
         self.red_led_duty = self.choose_duty(day, braking)
+        self.red_led.duty(self.red_led_duty)
 
         
+
