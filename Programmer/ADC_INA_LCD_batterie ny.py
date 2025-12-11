@@ -1,18 +1,9 @@
-from machine import ADC, Pin
-from machine import I2C
+from machine import ADC, Pin, UART, I2C
 from ina219_lib import INA219
-import time
-from time import sleep
-from machine import UART
 from gps_simple import GPS_SIMPLE
-from time import sleep
 from lmt87 import LMT87
-from machine import Pin
 from gpio_lcd import GpioLcd
-#from uthingsboard.client import TBDeviceMqttClient
-#import secrets
-#client = TBDeviceMqttClient(secrets.SERVER_IP_ADDRESS, access_token = secrets.ACCESS_TOKEN)
-#client.connect()
+import time
 
 PIN_BAT = 34
 
@@ -127,7 +118,7 @@ while True:
     cur_sum += current
     cur_avg = cur_sum / measurements
     
-    
+ 
     if gps.receive_nmea_data():
         print(f"UTC YYYY-MM-DD  : {gps.get_utc_year()}-{gps.get_utc_month():02d}-{gps.get_utc_day():02d}")
         print(f"UTC HH:MM:SS    : {gps.get_utc_hours()}:{gps.get_utc_minutes():02d}:{gps.get_utc_seconds():02d}")

@@ -2,12 +2,12 @@
 import time
 import network
 
-# Importere de klasser vi selv har lavet og skal bruge i main.py logiken
+# Importere de klasser vi selv har lavet
 from gps import GpsReader
 from tb_klient import ThingsBoardClient
 from bremselys import BremselysStyring
 
-# Hvor ofte vi vil opdatere GPS/Twilight fra ThingsBoard (i minutter)
+# Hvor ofte vi opdatere GPS/Twilight fra ThingsBoard
 TB_UPDATE_MINUTES = 5
 
 # Hovedfunktionen
@@ -63,7 +63,7 @@ def main():
     
     # Dette holder øje med, hvornår sidste thingsboard opdatering skete
     last_tb_update = time.time()
-    tb_update_interval = TB_UPDATE_MINUTES * 60  # sekunder
+    tb_update_interval = TB_UPDATE_MINUTES * 60  # Minutter omregnes til sekunder
     
     # Her kører vores bremselys logik: Læse mpu, find ax, tjekker bremsning, tjekke dag/nat og sætte farve
     while True:
