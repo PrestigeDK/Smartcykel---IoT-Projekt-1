@@ -8,6 +8,7 @@ class ThingsBoardClient:
     Håndterer:
       - connect/disconnect
       - sende GPS-telemetry
+      - sende batteri procent som telemetry
       - hente twilight-attributes
     """
 
@@ -27,6 +28,11 @@ class ThingsBoardClient:
     def send_gps(self, lat, lng, speed):
         data = {"lat": lat, "lng": lng, "speed": speed}
         print("Sender GPS data:", data)
+        self.client.send_telemetry(data)
+    
+    def send_battery(self, pct):
+        data = {"battery_pct": round(pct, 2)}
+        print("Sender batteri-telemetry (procent):", data)
         self.client.send_telemetry(data)
 
     def attributes_callback(self, payload):

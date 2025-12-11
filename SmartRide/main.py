@@ -2,13 +2,16 @@
 import time
 import network
 
-# Importere de klasser vi selv har lavet
+# Importere vores klasser
 from gps import GpsReader
 from tb_klient import ThingsBoardClient
 from bremselys import BremselysStyring
+from batteri import Battery
 
-# Hvor ofte vi opdatere GPS/Twilight fra ThingsBoard
+# Hvor ofte vi opdatere GPS/Twilight fra ThingsBoard + batteri/LCD
 TB_UPDATE_MINUTES = 5
+BATTERY_UPDATE_SECONDS = 5
+
 
 # Hovedfunktionen
 def main():
@@ -25,6 +28,7 @@ def main():
     gps = GpsReader()
     tb = ThingsBoardClient()
     bremselys = BremselysStyring()
+    battery = Battery()
 
     # 3) Forbind til ThingsBoard via MQTT og tb-klient
     # For at kunne sende og hente data gennem thingsboard, skal forbindelse oprettes, som sker via tb-klienten
@@ -62,6 +66,7 @@ def main():
     # Opdaterer GPS/Twilight sjældent, det gøres for at spare på strøm
     
     # Dette holder øje med, hvornår sidste thingsboard opdatering skete
+    last_battery_update = time.time()
     last_tb_update = time.time()
     tb_update_interval = TB_UPDATE_MINUTES * 60  # Minutter omregnes til sekunder
     
@@ -73,14 +78,17 @@ def main():
         # 5.2) Hvert x minutter, sender vi GPS data og henter ny twilight data
         now = time.time()
         
-        if now - last_tb_update > tb_update_interval:
+        if now - last_battery_update >= BATTERY_UPDATE_SECONDS:
+            # Opdatere batteri interval
             print("TB-opdateringsvindue...")
-            
+            battery.step()
+            last_battery_update = now
+        
+        if now - last_tb_update >= tb_update_interval:
             # Opdatere GPS & twilight hvert interval
             lat, lng, speed = gps.get_data(timeout_s=10)
             
             if lat is not None and lng is not None:
-                
                 # Hvis GPS er validt
                 tb.send_gps(lat, lng, speed)
                 twilight = tb.get_twilight(timeout_s=10)
@@ -97,10 +105,19 @@ def main():
                         
             else:
                 print("Ingen gyldig GPS-position, springer TB-opdatering over.")
+                
+                u_bat = battery.read_voltage()
+                pct = battery.get_pct(u_bat)
+                tb.send_battery(pct)
+                
             last_tb_update = now
             
         # Denne pause er for ikke at presse ESP'en for meget og spare på cpu'en     
-        time.sleep(0.125)
+        time.sleep(0.1)
+    
+    except KeyBoardInterrupt:
+        print("Program stopper nu.")
 
 # Dette starter så programmet vi har lavet ovenover
-main()
+if __name__ == "__main__":
+    main()
