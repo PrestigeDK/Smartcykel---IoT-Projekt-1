@@ -1,4 +1,4 @@
-from machine import Pin, I2C
+from machine import Pin, I2C, PWM
 from time import sleep
 from mpu6050 import MPU6050
 from neopixel import NeoPixel
@@ -11,22 +11,17 @@ class BremselysStyring:
         self.i2c = I2C(0, scl=Pin(18), sda=Pin(19))
         self.mpu = MPU6050(self.i2c)
         
-        #LED/transistor på GPIO26
-        self.antal_pixels = 2
-        self.np = NeoPixel(Pin(26, Pin.OUT), self.antal_pixels)
-        
+        #LED/transistor på GPIO12
+        self.red_led = PWM(Pin(12))
+        self.red_led_freq = 70
+        self.red_led_duty = 0
+
         #Tærskel for bremsing (G-force)
         self.neg_acc_threshold = -0.5
         
         # Twilight begin & end
         self.twilight_begin = None
         self.twilight_end = None
-    
-    # Funktion til at sætte farve på NeoPixel
-    def set_color(self, r, g, b):
-        for i in range(self.antal_pixels):
-            self.np[i] = (r, g, b)
-        self.np.write()
         
     # Funktion som sætter twilight variabler    
     def set_twilight(self, begin_dec, end_dec):
@@ -57,31 +52,31 @@ class BremselysStyring:
         return begin_min <= nu_min < end_min
 
     # Funktion som vælger farve ift. om vi bremser og om det er dag/nat
-    def choose_color(self, day, braking):
+    def choose_duty(self, day, braking):
         r, g, b = (0, 0, 0)
         # Hvis ingen data på dag, så sætter vi stadig lyset til svagt
         if day is None:
-            r, g, b = (64, 0, 0)
+            self.red_led_duty = 256
         # Hvis det er dag og vi ikke bremser, så er lyset slukket
         elif day == True and not braking:
-            r, g, b = (0, 0, 0)
+            self.red_led_duty = 0
         # Hvis det er dag og vi bremser, så sætter vi lyset til kraftigt
         elif day == True and braking == True:
-            r, g, b = (255, 0, 0)
+            self.red_led_duty = 1023
         # Hvis det ikke er dag og vi ikke bremser, sætter vi lyset til svagt
         elif day == False and not braking:
-            r, g, b = (64, 0, 0)
+            self.red_led_duty = 256
         # Hvis det ikke er dag og vi bresmer, sætter vi lyset til kraftigt
         elif day == False and braking == True:
-            r, g, b = (255, 0, 0)
+            self.red_led_duty = 1023
     
-        return (r, g, b)
+        return (self.red_led_duty)
     
     # Funktion som styrer logik og bruger tidligere funktioner i klassen
     def step(self):
         ax = self.read_mpu()
         braking = self.braking(ax)
         day = self.day_or_night()
-        r, g, b = self.choose_color(day, braking)
-        self.set_color(r, g, b)
+        self.red_led_duty = self.choose_duty(day, braking)
+
         
