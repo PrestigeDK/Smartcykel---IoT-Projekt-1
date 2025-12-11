@@ -1,7 +1,6 @@
 from machine import Pin, I2C, PWM
 from time import sleep
 from mpu6050 import MPU6050
-from neopixel import NeoPixel
 import time
 
 class BremselysStyring:
@@ -18,7 +17,7 @@ class BremselysStyring:
         self.red_led.duty(self.red_led_duty)
 
         #Tærskel for bremsing (G-force)
-        self.neg_acc_threshold = -0.5
+        self.neg_acc_threshold = -0.8
         
         # Twilight begin & end
         self.twilight_begin = None
@@ -37,7 +36,6 @@ class BremselysStyring:
     
     # Funktion der tjekker om vi bremser
     def braking(self, ax):
-        #print(ax, self.neg_acc_threshold)
         return ax < self.neg_acc_threshold
     
     # Funktion som tjekker om det er dag/nat
@@ -55,8 +53,6 @@ class BremselysStyring:
 
     # Funktion som vælger farve ift. om vi bremser og om det er dag/nat
     def choose_duty(self, day, braking):
-        r, g, b = (0, 0, 0)
-        print(day, braking)
         # Hvis ingen data på dag, så sætter vi stadig lyset til svagt
         if day is None:
             self.red_led_duty = 2
@@ -72,7 +68,6 @@ class BremselysStyring:
         # Hvis det ikke er dag og vi bresmer, sætter vi lyset til kraftigt
         elif day == False and braking == True:
             self.red_led_duty = 1023
-        print('RED DUTY', self.red_led_duty)
         return (self.red_led_duty)
     
     # Funktion som styrer logik og bruger tidligere funktioner i klassen
