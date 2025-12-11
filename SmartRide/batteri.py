@@ -16,14 +16,20 @@ class Battery:
         self.i2c_port = 0 # I2C port nummeret
         self.ina219_i2c_addr = 0x40 # INA219 I2C adresse
         
+        self.pin_lmt87 = 35
+        self.temp = LMT87(pin_lmt87)
+        
+        self.ina219.set_calibration_16V_400mA() # Sætter en mere sensitiv range
+        
+        # Objekter
+        self.i2c = I2C(self.i2c_port)
+        self.ina219 = INA219(self.i2c, self.ina219_i2c_addr)
+
         # Kalibrations værdier
         self.t1 = 25.2
         self.adc1 = 2659
         self.t2 = 24.2
         self.adc2 = 2697
-        
-        self.pin_lmt87 = 35
-        self.temp = LMT87(pin_lmt87)
         
         # Variabler
         self.cur_max = -9999 # max current
