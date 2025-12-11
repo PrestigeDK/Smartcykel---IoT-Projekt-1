@@ -13,10 +13,10 @@ class Battery:
         self.pin_bat = 34
         self.adc = ADC(Pin(self.pin_bat))
         
-        self.i2c_port = 0 # The I2C port number
-        self.ina219_i2c_addr = 0x40 # The INA219 I2C address
+        self.i2c_port = 0 # I2C port nummeret
+        self.ina219_i2c_addr = 0x40 # INA219 I2C adresse
         
-        # Calibration values
+        # Kalibrations værdier
         self.t1 = 25.2
         self.adc1 = 2659
         self.t2 = 24.2
@@ -26,10 +26,10 @@ class Battery:
         self.temp = LMT87(pin_lmt87)
         
         # Variabler
-        self.cur_max = -9999 # The max current
-        self.cur_min = 9999  # The min current
-        self.cur_sum = 0 # The sum of current measurements
-        self.measurements = 0 # Number of measurements
+        self.cur_max = -9999 # max current
+        self.cur_min = 9999  # min current
+        self.cur_sum = 0 # summen af current målinger
+        self.measurements = 0 # Antal af målinger
 
     # Funktion som læser adc værdier
     def adc_read(self):
@@ -54,11 +54,11 @@ class Battery:
         if current == 0:
             current = 0.1
         
-        # Update the flow variables
-        self.measurements += 1 # Increment the counter
+        # Opdater flow variablerne
+        self.measurements += 1 # Inkrementere tælleren
         timestamp = time.ticks_ms() # Get the relative time stamp
         
-        # Check min, max and calc average
+        # Tjekker min, max og beregnet avg
         if current < self.cur_min:
             self.cur_min = current
         elif current > self-cur_max:
@@ -66,3 +66,4 @@ class Battery:
         
         self.cur_sum += current
         cur_avg = self.cur_sum / self.measurements
+        
