@@ -10,19 +10,16 @@ PIN_BAT = 34
 U_MIN = 3.0   # 0%
 U_MAX = 4.2   # 100%
 
-I2C_PORT = 0          # I2C port
-INA_ADDR = 0x40       # INA219-adresse
-
 
 class Battery:
-    def __init__(self):
+    def __init__(self, i2c):
         # ADC til batterispænding
         self.adc = ADC(Pin(PIN_BAT))
         self.adc.atten(ADC.ATTN_11DB)   # ~0–3.3V
 
         # I2C + INA219 til strøm
-        self.i2c = I2C(I2C_PORT)
-        self.ina219 = INA219(self.i2c, INA_ADDR)
+        self.i2c = i2c
+        self.ina219 = INA219(self.i2c, 0x40)
         self.ina219.set_calibration_16V_400mA()
 
         # LCD på Educaboard
@@ -88,23 +85,23 @@ class Battery:
         u_bat = self.read_voltage()
         pct = self.get_pct(u_bat)
         current, cur_min, cur_max, cur_avg = self.read_current_with_stats()
-
-        # Linje 0: spænding + batteriprocent
+        
+        # Linje 0: Batteryprocent
         self.lcd.move_to(0, 0)
-        line0 = f"{u_bat:0.1f}V B:{pct:0.1f}%"
-        self.lcd.putstr(line0.ljust(20))
+        text0 = "{:.1f}V B:{:.1f}%".format(u_bat, pct)
+        self.lcd.putstr((text0 + " " * 20)[:20])
 
-        # Linje 1: aktuel strøm
+        # Linje 1: Strøm, nu
         self.lcd.move_to(0, 1)
-        line1 = f"I:{current:0.1f} mA"
-        self.lcd.putstr(line1.ljust(20))
+        text1 = "I:{:.1f} mA".format(current)
+        self.lcd.putstr((text1 + " " * 20)[:20])
 
-        # Linje 2: min/max strøm
+        # Linje 2: Strøm, min/max
         self.lcd.move_to(0, 2)
-        line2 = f"mn:{cur_min:0.1f} mx:{cur_max:0.1f}"
-        self.lcd.putstr(line2.ljust(20))
+        text2 = "mn:{:.1f} mx:{:.1f}".format(cur_min, cur_max)
+        self.lcd.putstr((text2 + " " * 20)[:20])
 
-        # Linje 3: gennemsnitlig strøm
+        # Linje 3: Strøm avg
         self.lcd.move_to(0, 3)
-        line3 = f"avg:{cur_avg:0.1f} mA"
-        self.lcd.putstr(line3.ljust(20))
+        text3 = "avg:{:.1f} mA".format(cur_avg)
+        self.lcd.putstr((text3 + " " * 20)[:20])

@@ -4,10 +4,10 @@ from mpu6050 import MPU6050
 import time
 
 class BremselysStyring:
-    def __init__(self):
+    def __init__(self, i2c):
         
         #I2C opsætning
-        self.i2c = I2C(0, scl=Pin(18), sda=Pin(19))
+        self.i2c = i2c
         self.mpu = MPU6050(self.i2c)
         
         #LED/transistor på GPIO12

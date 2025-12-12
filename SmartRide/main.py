@@ -1,6 +1,7 @@
 # Disse bruges til timing og wifi
 import time
 import network
+from machine import I2C, Pin
 
 # Importere vores klasser
 from gps import GpsReader
@@ -12,6 +13,7 @@ from batteri import Battery
 TB_UPDATE_MINUTES = 5
 BATTERY_UPDATE_SECONDS = 5
 
+i2c = I2C(0, scl=Pin(18), sda=Pin(19))
 
 # Hovedfunktionen
 def main():
@@ -27,8 +29,8 @@ def main():
     # Her opretter vi objekter af vores klasser vi har lavet, så de senere i programmet kan blive kaldt
     gps = GpsReader()
     tb = ThingsBoardClient()
-    bremselys = BremselysStyring()
-    battery = Battery()
+    bremselys = BremselysStyring(i2c)
+    battery = Battery(i2c)
 
     # 3) Forbind til ThingsBoard via MQTT og tb-klient
     # For at kunne sende og hente data gennem thingsboard, skal forbindelse oprettes, som sker via tb-klienten
