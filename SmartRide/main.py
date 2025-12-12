@@ -114,9 +114,6 @@ def main():
             
         # Denne pause er for ikke at presse ESP'en for meget og spare på cpu'en     
         time.sleep(0.1)
-    
-    except KeyBoardInterrupt:
-        print("Program stopper nu.")
 
 # Dette starter så programmet vi har lavet ovenover
 if __name__ == "__main__":
