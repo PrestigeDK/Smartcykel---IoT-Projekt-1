@@ -3,9 +3,6 @@ from ina219_lib import INA219
 from gpio_lcd import GpioLcd
 import time
 
-# Konfiguration af variabler
-PIN_BAT = 34
-
 # Batterigrænser for LiPo
 U_MIN = 3.0   # 0%
 U_MAX = 4.2   # 100%
@@ -14,7 +11,7 @@ U_MAX = 4.2   # 100%
 class Battery:
     def __init__(self, i2c):
         # ADC til batterispænding
-        self.adc = ADC(Pin(PIN_BAT))
+        self.adc = ADC(Pin(34))
         self.adc.atten(ADC.ATTN_11DB)   # ~0–3.3V
 
         # I2C + INA219 til strøm
@@ -39,6 +36,10 @@ class Battery:
         self.cur_min = 9999.0       # min current
         self.cur_sum = 0.0          # sum af målinger
         self.measurements = 0       # antal målinger
+        
+        # GPS
+        self.lat = None
+        self.lng = None
 
     # Læs batterispænding
     def read_voltage(self):
@@ -58,7 +59,7 @@ class Battery:
         return pct
 
     # Læs strøm fra INA219 + opdater min/avg/max
-    def read_current_with_stats(self):
+    def read_current(self):
         current = self.ina219.get_current()
 
         if current == 0:
@@ -79,29 +80,40 @@ class Battery:
         cur_avg = self.cur_sum / self.measurements
 
         return current, self.cur_min, self.cur_max, cur_avg
+    
+    # Funktion som gemmer lat & lng
+    def set_gps(self, lat, lng):
+        self.lat = lat
+        self.lng = lng
 
     # Funktion som opdatere lcd med aflæste & beregnet værdier
     def step(self):
         u_bat = self.read_voltage()
         pct = self.get_pct(u_bat)
-        current, cur_min, cur_max, cur_avg = self.read_current_with_stats()
+        current, cur_min, cur_max, cur_avg = self.read_current()
         
-        # Linje 0: Batteryprocent
+        # Linje 0: Batteri
         self.lcd.move_to(0, 0)
-        text0 = "{:.1f}V B:{:.1f}%".format(u_bat, pct)
+        text0 = "{:.1f}V B:{:.0f}%".format(u_bat, pct)
         self.lcd.putstr((text0 + " " * 20)[:20])
 
-        # Linje 1: Strøm, nu
+        # Linje 1: Strøm
         self.lcd.move_to(0, 1)
-        text1 = "I:{:.1f} mA".format(current)
+        text1 = "I:{:.0f}mA avg:{:.0f}".format(current, cur_avg)
         self.lcd.putstr((text1 + " " * 20)[:20])
 
-        # Linje 2: Strøm, min/max
+        # Linje 2: Latitude
         self.lcd.move_to(0, 2)
-        text2 = "mn:{:.1f} mx:{:.1f}".format(cur_min, cur_max)
+        if self.lat is not None:
+            text2 = "Lat:{:.5f}".format(self.lat)
+        else:
+            text2 = "Lat: ---"
         self.lcd.putstr((text2 + " " * 20)[:20])
 
-        # Linje 3: Strøm avg
+        # Linje 3: Longitude
         self.lcd.move_to(0, 3)
-        text3 = "avg:{:.1f} mA".format(cur_avg)
+        if self.lng is not None:
+            text3 = "Lng:{:.5f}".format(self.lng)
+        else:
+            text3 = "Lng: ---"
         self.lcd.putstr((text3 + " " * 20)[:20])

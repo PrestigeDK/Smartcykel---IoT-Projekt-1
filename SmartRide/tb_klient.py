@@ -14,7 +14,7 @@ class ThingsBoardClient:
 
     def __init__(self):
         self.twilight = {"begin": None, "end": None}
-        self.client = TBDeviceMqttClient(host=secrets.SERVER_IP_ADDRESS,port=1886,access_token=secrets.ACCESS_TOKEN)
+        self.client = TBDeviceMqttClient(host=secrets.SERVER_IP_ADDRESS,port=1883,access_token=secrets.ACCESS_TOKEN)
 
     def connect(self):
         print("Forbinder til ThingsBoard...")

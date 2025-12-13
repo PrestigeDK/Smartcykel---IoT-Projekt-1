@@ -39,14 +39,16 @@ def main():
     # 4) Første GPS + twilight-opdatering
     # Enten bliver lat, lng & speed returneret eller None, hvis data f.eks. mangler
     print("Forsøger at hente GPS data...")
-    lat, lng, speed = gps.get_data(timeout_s=10)
+    lat, lng, speed = gps.get_data(timeout_s=3)
 
     # Her sender vi kun data til thingsboard hvis der er data, altså omvendt af None
+    # Samt vi sender gps til battery-funktion, så det kan blive vist på lcd displayet
     if lat is not None and lng is not None:
         tb.send_gps(lat, lng, speed)
+        battery.set_gps(lat, lng)
         
         # Vi venter på at thingsboard sender twilight data
-        twilight = tb.get_twilight(timeout_s=10)
+        twilight = tb.get_twilight(timeout_s=3)
         print("Twilight data hentet:", twilight)
         
         # Her får vi altså vores twilight_begin og twilight_end data, gemmer dem i bremselys,
@@ -82,7 +84,6 @@ def main():
         
         if now - last_battery_update >= BATTERY_UPDATE_SECONDS:
             # Opdatere batteri interval
-            print("TB-opdateringsvindue...")
             battery.step()
             last_battery_update = now
         
@@ -93,6 +94,7 @@ def main():
             if lat is not None and lng is not None:
                 # Hvis GPS er validt
                 tb.send_gps(lat, lng, speed)
+                battery.set_gps(lat, lng)
                 twilight = tb.get_twilight(timeout_s=10)
                 print("Twilight data hentet:", twilight)
                 
@@ -106,12 +108,13 @@ def main():
                         print(f"Twilight opdateret: begin={begin}, end={end}")
                         
             else:
-                print("Ingen gyldig GPS-position, springer TB-opdatering over.")
-                
-                u_bat = battery.read_voltage()
-                pct = battery.get_pct(u_bat)
-                tb.send_battery(pct)
-                
+                print("Ingen gyldig GPS-position, springer TB-opdatering over.")            
+            
+            u_bat = battery.read_voltage()
+            pct = battery.get_pct(u_bat)
+            tb.send_battery(pct)
+            print("TB battery sent:", pct)
+            
             last_tb_update = now
             
         # Denne pause er for ikke at presse ESP'en for meget og spare på cpu'en     
