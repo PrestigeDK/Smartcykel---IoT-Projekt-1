@@ -14,7 +14,7 @@ class ThingsBoardClient:
 
     def __init__(self):
         self.twilight = {"begin": None, "end": None}
-        self.client = TBDeviceMqttClient(host=secrets.SERVER_IP_ADDRESS,port=1883,access_token=secrets.ACCESS_TOKEN)
+        self.client = TBDeviceMqttClient(host=secrets.SERVER_IP_ADDRESS,port=1886,access_token=secrets.ACCESS_TOKEN)
 
     def connect(self):
         print("Forbinder til ThingsBoard...")
@@ -25,14 +25,18 @@ class ThingsBoardClient:
         self.client.disconnect()
         print("Afbrudt forbindelse til ThingsBoard")
 
-    def send_gps(self, lat, lng, speed):
-        data = {"lat": lat, "lng": lng, "speed": speed}
+    def send_gps(self, lat, lng, speed, course):
+        data = {"lat": lat, "lng": lng, "speed": speed, "course": course}
         print("Sender GPS data:", data)
         self.client.send_telemetry(data)
     
     def send_battery(self, pct):
         data = {"battery_pct": round(pct, 2)}
         print("Sender batteri-telemetry (procent):", data)
+        self.client.send_telemetry(data)
+        
+    def send_temperature(self, temperature_c):
+        data = {"temperature_c": round(temperature_c, 1)}
         self.client.send_telemetry(data)
 
     def attributes_callback(self, payload):
