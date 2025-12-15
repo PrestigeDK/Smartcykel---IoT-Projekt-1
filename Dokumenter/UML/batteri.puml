@@ -1,0 +1,18 @@
+@startuml Battery
+class Battery {
+  -adc
+  -ina219
+  -temp
+  -lcd
+  -lat
+  -lng
+  -course
+
+  +read_voltage()
+  +get_pct(u_bat)
+  +read_temperature()
+  +read_current()
+  +set_gps(lat, lng, course)
+  +step()
+}
+@enduml

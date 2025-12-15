@@ -1,0 +1,12 @@
+@startuml Main
+
+class Main {
+  +main()
+}
+
+Main ..> GpsReader
+Main ..> Battery
+Main ..> BremselysStyring
+Main ..> ThingsBoardClient
+
+@enduml

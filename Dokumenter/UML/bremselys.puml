@@ -1,0 +1,18 @@
+@startuml BremselysStyring
+
+class BremselysStyring {
+  -mpu
+  -red_led
+  -neg_acc_threshold
+  -twilight_begin
+  -twilight_end
+
+  +set_twilight(begin_dec, end_dec)
+  +read_mpu()
+  +braking(ax)
+  +day_or_night()
+  +choose_duty(day, braking)
+  +step()
+}
+
+@enduml
