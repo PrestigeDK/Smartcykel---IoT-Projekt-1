@@ -54,7 +54,7 @@ while True:
         co2_value = float(data_co2['records'][1]['CO2Emission'])
     except Exception as e:
         co2_value = 999.00
-        print("CO2 error:", e)
+        print("CO2 fetch error:", e)
 
     # Bestem om vi har grøn energi
     is_green = co2_value <= CO2_MAX_G_PER_KWH
@@ -77,3 +77,4 @@ while True:
           .format(co2_value, is_green, relay.value()))
 
     sleep(5)
+    
