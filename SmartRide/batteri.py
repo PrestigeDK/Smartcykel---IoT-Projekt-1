@@ -58,7 +58,7 @@ class Battery:
     # Læs batterispænding
     def read_voltage(self):
         raw = self.adc.read()
-        u_bat = 0.001428 * raw + 1.03
+        u_bat = 0.27961 * raw + 0.00161
         return u_bat
 
     # Udregn batteriprocent
