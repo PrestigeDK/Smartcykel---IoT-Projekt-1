@@ -20,6 +20,11 @@ class GpsReader:
                     speed = self.gps.get_speed()
                     return lat, lng, speed, course
         return None, None, None, None
+    
+    def read_valid(self, timeout_s=3):
+        lat, lng, speed, course = self.get_data(timeout_s)
+        valid = (lat is not None) and (lng is not None)
+        return valid, lat, lng, speed, course
 
     def haversine(self, lat1, lng1, lat2, lng2):
         R = 6371000

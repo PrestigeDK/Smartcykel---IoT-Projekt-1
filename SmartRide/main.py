@@ -7,7 +7,7 @@ from tb_klient import ThingsBoardClient
 from bremselys import BremselysStyring
 from batteri import Battery
 
-TB_UPDATE_MINUTES = 0.1
+TB_UPDATE_MINUTES = 5
 BATTERY_UPDATE_SECONDS = 5
 GPS_CHECK_SECONDS = 10
 STATIONARY_SECONDS = 40
@@ -29,18 +29,20 @@ def main():
 
     tb.connect()
 
-    lat, lng, speed, course = gps.get_data(timeout_s=10)
+    gps_valid, lat, lng, speed, course = gps.read_valid(10)
 
-    if lat is not None and lng is not None:
+    had_fix = gps_valid
+
+    if gps_valid:
         tb.send_gps(lat, lng, speed, course)
         battery.set_gps(lat, lng, course)
 
-        twilight = tb.get_twilight(timeout_s=10)
-        if twilight is not None:
-            begin = twilight.get("begin")
-            end = twilight.get("end")
-            if begin is not None and end is not None:
-                bremselys.set_twilight(begin, end)
+    twilight = tb.get_twilight(timeout_s=10)
+    if twilight is not None:
+        begin = twilight.get("begin")
+        end = twilight.get("end")
+        if begin is not None and end is not None:
+            bremselys.set_twilight(begin, end)
 
     last_battery_update = time.time()
     last_tb_update = time.time()
@@ -55,6 +57,7 @@ def main():
     
     theft_armed = False
     theft_alert = False
+    
     theft_gps_seconds = 10
     last_theft_gps_send = 0
 
@@ -64,52 +67,53 @@ def main():
         now = time.time()
         
         if theft_alert and (now - last_theft_gps_send >= theft_gps_seconds):
-            lat, lng, speed, course = gps.get_data(timeout_s=3)
+            gps_valid, lat, lng, speed, course = gps.read_valid(3)
             
-            if lat is not None and lng is not None:
+            if gps_valid:
+                had_fix = True
                 tb.send_gps(lat, lng, speed, course)
+
             last_theft_gps_send = now
         
         
         if now - last_gps_check >= GPS_CHECK_SECONDS:
-            lat, lng, speed, course = gps.get_data(timeout_s=3)
-            
-            if lat is not None and lng is not None:
+            gps_valid, lat, lng, speed, course = gps.read_valid(3)
+
+            if gps_valid:
+                had_fix = True
                 battery.set_gps(lat, lng, course)
-                
-                moved = False
-                
-                if last_lat is not None and last_lng is not None:
-                    distance_m = gps.haversine(last_lat, last_lng, lat, lng)
-                    if distance_m >= MOVE_THRESHOLD_M:
-                        moved = True
-                
-                last_lat, last_lng = lat, lng
-                
-                if moved:
+
+                if last_lat is None and last_lng is None:
+                    last_lat, last_lng = lat, lng
                     last_move_time = now
-                    
-                    if theft_armed and not theft_alert:
-                        theft_alert = True
-                        theft_armed = False
-                        tb.client.send_telemetry({"theft_alert": 1})
-                        print("Bevægelse registreret, alarm sendt til TB.")
                 else:
-                    if (now - last_move_time) >= STATIONARY_SECONDS and not theft_alert:
-                        print("Enhed har været stille i mere end:",STATIONARY_SECONDS, "sekunder.")
-                        theft_armed = True
+                    moved = False
+                    distance_m = gps.haversine(last_lat, last_lng, lat, lng)
+                    moved = distance_m >= MOVE_THRESHOLD_M
+
+                    last_lat, last_lng = lat, lng
+
+                    if moved:
+                        last_move_time = now
+                        if theft_armed and not theft_alert:
+                            theft_alert = True
+                            theft_armed = False
+                            tb.client.send_telemetry({"theft_alert": 1})
+                    else:
+                        if had_fix and (now - last_move_time) >= STATIONARY_SECONDS and not theft_alert:
+                            theft_armed = True
+
             last_gps_check = now
-                
-                
+                      
         if now - last_battery_update >= BATTERY_UPDATE_SECONDS:
             battery.step()
             last_battery_update = now
 
-
         if now - last_tb_update >= tb_update_interval:
-            lat, lng, speed, course = gps.get_data(timeout_s=3)
+            gps_valid, lat, lng, speed, course = gps.read_valid(3)
 
-            if lat is not None and lng is not None:
+            if gps_valid:
+                had_fix = True
                 tb.send_gps(lat, lng, speed, course)
                 battery.set_gps(lat, lng, course)
 
@@ -127,10 +131,10 @@ def main():
             temp_c = battery.read_temperature()
             tb.send_temperature(temp_c)
 
-
             last_tb_update = now
 
         time.sleep(0.1)
+
 
 if __name__ == "__main__":
     main()
