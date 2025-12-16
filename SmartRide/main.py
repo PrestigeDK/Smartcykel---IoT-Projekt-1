@@ -7,10 +7,10 @@ from bremselys import BremselysStyring
 from batteri import Battery
 
 TB_UPDATE_MINUTES = 2
-BATTERY_UPDATE_SECONDS = 10
-GPS_CHECK_SECONDS = 10
-STATIONARY_SECONDS = 40
-MOVE_THRESHOLD_M = 5
+BATTERY_UPDATE_SECONDS = 30
+GPS_CHECK_SECONDS = 30
+STATIONARY_SECONDS = 20
+MOVE_THRESHOLD_M = 2
 
 i2c = I2C(0, scl=Pin(18), sda=Pin(19))
 
@@ -94,11 +94,13 @@ def main():
                     if moved:
                         last_move_time = now
                         if theft_armed and not theft_alert:
+                            print("Bevægelse opdaget, sender data & alarm til thingsboard.")
                             theft_alert = True
                             theft_armed = False
                             tb.client.send_telemetry({"theft_alert": 1})
                     else:
                         if had_fix and (now - last_move_time) >= STATIONARY_SECONDS and not theft_alert:
+                            print(f"Enhed har været stille i mere end:{STATIONARY_SECONDS} sekunder, enhed er sikret.")
                             theft_armed = True
 
             last_gps_check = now
