@@ -7,7 +7,6 @@ import time
 U_MIN = 3.0
 U_MAX = 4.2
 
-
 class Battery:
     def __init__(self, i2c):
         self.adc = ADC(Pin(34))
