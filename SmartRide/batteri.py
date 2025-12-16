@@ -50,7 +50,7 @@ class Battery:
 
     def read_voltage(self):
         raw = self.adc.read()
-        u_bat = 0.27961 * raw + 0.00161
+        u_bat = 0.00161 * raw + 0.27961
         return u_bat
 
     def get_pct(self, u_bat):
