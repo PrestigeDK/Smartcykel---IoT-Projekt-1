@@ -51,8 +51,9 @@ class ThingsBoardClient:
         start = time.time()
         while time.time() - start < timeout_s:
             self.client.check_msg()
-            if self.twilight["begin"] is not None:
+            if self.twilight["begin"] is not None and self.twilight["end"] is not None:
                 break
+            
             time.sleep(0.2)
 
         return self.twilight

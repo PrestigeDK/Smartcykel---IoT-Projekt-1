@@ -1,20 +1,18 @@
 import time
 import network
 from machine import I2C, Pin
-
 from gps import GpsReader
 from tb_klient import ThingsBoardClient
 from bremselys import BremselysStyring
 from batteri import Battery
 
-TB_UPDATE_MINUTES = 0.1
-BATTERY_UPDATE_SECONDS = 5
+TB_UPDATE_MINUTES = 2
+BATTERY_UPDATE_SECONDS = 10
 GPS_CHECK_SECONDS = 10
 STATIONARY_SECONDS = 40
-MOVE_THRESHOLD_M = 2
+MOVE_THRESHOLD_M = 5
 
 i2c = I2C(0, scl=Pin(18), sda=Pin(19))
-
 
 def main():
     wlan = network.WLAN(network.STA_IF)
@@ -134,7 +132,6 @@ def main():
             last_tb_update = now
 
         time.sleep(0.1)
-
 
 if __name__ == "__main__":
     main()

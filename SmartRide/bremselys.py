@@ -58,13 +58,13 @@ class BremselysStyring:
 
     def choose_duty(self, day, braking):
         if day is None:
-            self.red_led_duty = 2
+            self.red_led_duty = 126
         elif day == True and not braking:
             self.red_led_duty = 0
         elif day == True and braking == True:
             self.red_led_duty = 1023
         elif day == False and not braking:
-            self.red_led_duty = 2
+            self.red_led_duty = 126
         elif day == False and braking == True:
             self.red_led_duty = 1023
         return (self.red_led_duty)
