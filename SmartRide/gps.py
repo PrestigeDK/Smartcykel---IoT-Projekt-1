@@ -36,6 +36,3 @@ class GpsReader:
         a = (math.sin(dlat / 2) ** 2) + (math.cos(lat1) * math.cos(lat2) * (math.sin(dlng / 2) ** 2))
         c = 2 * math.asin(math.sqrt(a))
         return R * c
-
-    
-    

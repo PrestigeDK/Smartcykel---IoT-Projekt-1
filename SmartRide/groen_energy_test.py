@@ -5,17 +5,13 @@ from gpio_lcd import GpioLcd
 from lcd_api import LcdApi
 from machine import Pin
 
-# Grænse for grøn/rød energy
 CO2_MAX_G_PER_KWH = 50.0
 
-# NeoPixel
 np = NeoPixel(Pin(26, Pin.OUT), 1)
 antal_pixels = 1
 
-# Relæ
 relay = Pin(14, Pin.OUT)
 
-# LCD
 lcd = GpioLcd(rs_pin=Pin(27),
               enable_pin=Pin(25),
               d4_pin=Pin(33),

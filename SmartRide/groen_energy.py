@@ -5,17 +5,13 @@ from gpio_lcd import GpioLcd
 from lcd_api import LcdApi
 from machine import Pin
 
-# Config threshold
-CO2_MAX_G_PER_KWH = 50.0       # Grænse for grøn energi
+CO2_MAX_G_PER_KWH = 50.0
 
-# NeoPixel
 np = NeoPixel(Pin(26, Pin.OUT), 1)
 antal_pixels = 1
 
-# Relæ
 relay = Pin(14, Pin.OUT)
 
-# LCD
 lcd = GpioLcd(rs_pin=Pin(27),
               enable_pin=Pin(25),
               d4_pin=Pin(33),
@@ -42,13 +38,12 @@ def write_line(row: int, text: str):
 
 def show_data_on_lcd(co2, status, relay_on):
     write_line(0, "CO2: {:>5.1f} g/kWh".format(co2))
-    write_line(1, " ")          # Tom linje (kan bruges til noget andet)
+    write_line(1, " ")
     write_line(2, "Status: {}".format(status))
     write_line(3, "Relay: {}".format("ON" if relay_on else "OFF"))
 
 while True:
     try:
-        # Hent CO2-data
         resp_co2 = requests.get('https://api.energidataservice.dk/dataset/CO2Emis?limit=2')
         data_co2 = resp_co2.json()
         co2_value = float(data_co2['records'][1]['CO2Emission'])
@@ -56,10 +51,8 @@ while True:
         co2_value = 999.00
         print("CO2 fetch error:", e)
 
-    # Bestem om vi har grøn energi
     is_green = co2_value <= CO2_MAX_G_PER_KWH
 
-    # LED farve
     if is_green:
         set_np_color(0, 255, 0)
         relay.on()
@@ -69,10 +62,8 @@ while True:
         relay.off()
         status = "Not Green"
 
-    # LCD
     show_data_on_lcd(co2_value, status, relay.value() == 1)
 
-    # Debug i shell
     print("CO2:{:.1f} g/kWh | Green:{} | Relay:{}"
           .format(co2_value, is_green, relay.value()))
 

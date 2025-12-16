@@ -78,6 +78,3 @@ class BremselysStyring:
 
         self.red_led_duty = self.choose_duty(day, braking)
         self.red_led.duty(self.red_led_duty)
-
-
-        
