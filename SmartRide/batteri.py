@@ -54,6 +54,11 @@ class Battery:
         self.lat = None
         self.lng = None
         self.course = None
+        
+        # LCD-sider
+        self.lcd_page = 0
+        self.lcd_last_switch = time.time()
+        self.lcd_switch_s = 5.0
 
     # Læs batterispænding
     def read_voltage(self):
@@ -98,53 +103,68 @@ class Battery:
         self.lat = lat
         self.lng = lng
         self.course = course
+    
+    def rest_tid(self, pct, current):
+        if current <= 0:
+            return None
+        remaining_mah = (pct / 100) * 2000
+        return remaining_mah / current
+    
+    def display_status(self, pct, u_bat, current, temperature):
+        now = time.time()
+        if now - self.lcd_last_switch >= self.lcd_switch_s:
+            self.lcd_page = (self.lcd_page + 1) % 2
+            self.lcd_last_switch = now
+            self.lcd.clear()
 
-    # Opdater LCD
+        # Side 0: BAT + U + I + RT
+        if self.lcd_page == 1:
+            self.lcd.move_to(0, 0)
+            self.lcd.putstr(f"BAT:{pct:5.1f}%  T:{temperature:4.1f}")
+
+            self.lcd.move_to(0, 1)
+            self.lcd.putstr(f"U:{u_bat:4.2f}V  I:{current:4.0f}mA")
+
+            rt = self.rest_tid(pct, current)
+            self.lcd.move_to(0, 2)
+            if rt is None:
+                self.lcd.putstr("RT: --")
+            else:
+                h = int(rt)
+                m = int((rt - h) * 60)
+                self.lcd.putstr(f"RT:{h}h{m:02d}m")
+
+            self.lcd.move_to(12, 3)
+            self.lcd.putstr("Side 1/2")
+
+        # Side 1: GPS info
+        else:
+            self.lcd.move_to(0, 0)
+            self.lcd.putstr("GPS:")
+
+            self.lcd.move_to(0, 1)
+            if self.lat is None or self.lng is None:
+                self.lcd.putstr("Ingen data")
+            else:
+                self.lcd.putstr(f"Lat:{self.lat: .5f}")
+
+            self.lcd.move_to(0, 2)
+            if self.lat is not None and self.lng is not None:
+                self.lcd.putstr(f"Lng:{self.lng: .5f}")
+
+            self.lcd.move_to(0, 3)
+            if self.course is None:
+                self.lcd.putstr("Crs: --     Side 2/2")
+            else:
+                self.lcd.putstr(f"Crs:{self.course:5.1f} 2/2")
+
     def step(self):
         u_bat = self.read_voltage()
         pct = self.get_pct(u_bat)
         current, cur_min, cur_max, cur_avg = self.read_current()
         temperature = self.read_temperature()
+        
+        self.display_status(pct, u_bat, current, temperature)
 
         # Print til konsollen
-        print("Battery:", round(u_bat, 2), "V |", round(pct, 1), "% |",
-              "I:", round(current, 1), "mA |",
-              "Temp:", temperature, "C")
-
-        # Linje 0: Batteri + temp
-        self.lcd.move_to(0, 0)
-        text0 = "{:.1f}V B:{:.0f}%".format(u_bat, pct)
-        self.lcd.putstr((text0 + " " * 20)[:11])   # fyld til kol 11
-
-        self.lcd.move_to(11, 0)                    # col=11, row=0
-        textT = "T:{}C".format(int(temperature))
-        self.lcd.putstr((textT + " " * 9)[:9])     # resten af linjen
-
-        # Linje 1: Strøm + avg
-        self.lcd.move_to(0, 1)
-        text1 = "I:{:.0f}mA avg:{:.0f}".format(current, cur_avg)
-        self.lcd.putstr((text1 + " " * 20)[:20])
-
-        # Linje 2: Latitude
-        self.lcd.move_to(0, 2)
-        if self.lat is not None:
-            text2 = "Lat:{:.5f}".format(self.lat)
-        else:
-            text2 = "Lat: ---"
-        self.lcd.putstr((text2 + " " * 20)[:20])
-
-        # Linje 3: Longitude
-        self.lcd.move_to(0, 3)
-        if self.lng is not None:
-            text3 = "Lng:{:.5f}".format(self.lng)
-        else:
-            text3 = "Lng: ---"
-        self.lcd.putstr((text3 + " " * 12)[:12])
-        
-        # Linje 3: Course
-        self.lcd.move_to(13, 3)
-        if self.course is not None:
-            text4 = "C:{:.1f}".format(self.course)
-        else:
-            text4 = "C: --"
-        self.lcd.putstr((text4 + " " * 7)[:7])
+        print("Battery:", round(u_bat, 2), "V |", round(pct, 1), "% |","I:", round(current, 1), "mA |","Temp:", temperature, "C")
