@@ -7,7 +7,7 @@ from tb_klient import ThingsBoardClient
 from bremselys import BremselysStyring
 from batteri import Battery
 
-TB_UPDATE_MINUTES = 5
+TB_UPDATE_MINUTES = 0.1
 BATTERY_UPDATE_SECONDS = 5
 GPS_CHECK_SECONDS = 10
 STATIONARY_SECONDS = 40
@@ -35,7 +35,7 @@ def main():
 
     if gps_valid:
         tb.send_gps(lat, lng, speed, course)
-        battery.set_gps(lat, lng, course)
+        battery.set_gps(lat, lng, course, speed)
 
     twilight = tb.get_twilight(timeout_s=10)
     if twilight is not None:
@@ -81,7 +81,7 @@ def main():
 
             if gps_valid:
                 had_fix = True
-                battery.set_gps(lat, lng, course)
+                battery.set_gps(lat, lng, course, speed)
 
                 if last_lat is None and last_lng is None:
                     last_lat, last_lng = lat, lng
@@ -115,7 +115,7 @@ def main():
             if gps_valid:
                 had_fix = True
                 tb.send_gps(lat, lng, speed, course)
-                battery.set_gps(lat, lng, course)
+                battery.set_gps(lat, lng, course, speed)
 
                 twilight = tb.get_twilight(timeout_s=10)
                 if twilight is not None:
@@ -128,8 +128,8 @@ def main():
             pct = battery.get_pct(u_bat)
             tb.send_battery(pct)
             
-            temp_c = battery.read_temperature()
-            tb.send_temperature(temp_c)
+            temperature_c = battery.read_temperature()
+            tb.send_temperature(temperature_c)
 
             last_tb_update = now
 

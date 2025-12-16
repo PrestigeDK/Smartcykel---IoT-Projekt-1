@@ -3,15 +3,6 @@ from uthingsboard.client import TBDeviceMqttClient
 import secrets
 
 class ThingsBoardClient:
-    """
-    Klasse omkring TBDeviceMqttClient.
-    Håndterer:
-      - connect/disconnect
-      - sende GPS-telemetry
-      - sende batteri procent som telemetry
-      - hente twilight-attributes
-    """
-
     def __init__(self):
         self.twilight = {"begin": None, "end": None}
         self.client = TBDeviceMqttClient(host=secrets.SERVER_IP_ADDRESS,port=1886,access_token=secrets.ACCESS_TOKEN)
@@ -51,12 +42,6 @@ class ThingsBoardClient:
               f"End: {self.twilight['end']}")
 
     def get_twilight(self, timeout_s=10):
-        """
-        Sender en attributes-request til ThingsBoard og venter op til timeout_s
-        på svar. Returnerer et dict med 'begin' og 'end' (kan være none hvis
-        der ikke kommer svar i tide).
-        """
-        # Reset værdier
         self.twilight["begin"] = None
         self.twilight["end"] = None
 

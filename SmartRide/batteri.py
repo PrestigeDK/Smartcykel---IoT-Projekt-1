@@ -55,6 +55,8 @@ class Battery:
         self.lng = None
         self.course = None
         
+        self.speed = None
+        
         # LCD-sider
         self.lcd_page = 0
         self.lcd_last_switch = time.time()
@@ -98,11 +100,12 @@ class Battery:
 
         return current, self.cur_min, self.cur_max, cur_avg
 
-    # Gem lat/lng/course fra main
-    def set_gps(self, lat, lng, course):
+    # Gem lat/lng/course/speed fra main
+    def set_gps(self, lat, lng, course, speed):
         self.lat = lat
         self.lng = lng
         self.course = course
+        self.speed = speed
     
     def rest_tid(self, pct, current):
         if current <= 0:
@@ -110,14 +113,14 @@ class Battery:
         remaining_mah = (pct / 100) * 2000
         return remaining_mah / current
     
-    def display_status(self, pct, u_bat, current, temperature):
+    def display_status(self, pct, u_bat, current, temperature, speed):
         now = time.time()
         if now - self.lcd_last_switch >= self.lcd_switch_s:
             self.lcd_page = (self.lcd_page + 1) % 2
             self.lcd_last_switch = now
             self.lcd.clear()
 
-        # Side 0: BAT + U + I + RT
+        # Side 1: BAT + U + I + RT
         if self.lcd_page == 1:
             self.lcd.move_to(0, 0)
             self.lcd.putstr(f"BAT:{pct:5.1f}%  T:{temperature:4.1f}")
@@ -137,34 +140,41 @@ class Battery:
             self.lcd.move_to(12, 3)
             self.lcd.putstr("Side 1/2")
 
-        # Side 1: GPS info
+        # Side 2: GPS info
         else:
             self.lcd.move_to(0, 0)
-            self.lcd.putstr("GPS:")
+        if self.speed is None:
+            self.lcd.putstr("Speed: --")
+        else:
+            self.lcd.putstr(f"Speed:{self.speed:6.2f}")
 
-            self.lcd.move_to(0, 1)
-            if self.lat is None or self.lng is None:
-                self.lcd.putstr("Ingen data")
-            else:
-                self.lcd.putstr(f"Lat:{self.lat: .5f}")
+        self.lcd.move_to(0, 1)
+        if self.lat is None:
+            self.lcd.putstr("Lat: --")
+        else:
+            self.lcd.putstr(f"Lat:{self.lat: .5f}")
 
-            self.lcd.move_to(0, 2)
-            if self.lat is not None and self.lng is not None:
-                self.lcd.putstr(f"Lng:{self.lng: .5f}")
+        self.lcd.move_to(0, 2)
+        if self.lng is None:
+            self.lcd.putstr("Lng: --")
+        else:
+            self.lcd.putstr(f"Lng:{self.lng: .5f}")
 
-            self.lcd.move_to(0, 3)
-            if self.course is None:
-                self.lcd.putstr("Crs: --     Side 2/2")
-            else:
-                self.lcd.putstr(f"Crs:{self.course:5.1f} 2/2")
+        self.lcd.move_to(0, 3)
+        if self.course is None:
+            self.lcd.putstr("Crs: --     Side 2/2")
+        else:
+            self.lcd.putstr(f"Crs:{self.course:5.1f} 2/2")
 
     def step(self):
         u_bat = self.read_voltage()
         pct = self.get_pct(u_bat)
         current, cur_min, cur_max, cur_avg = self.read_current()
         temperature = self.read_temperature()
+        speed = self.speed
         
-        self.display_status(pct, u_bat, current, temperature)
+        self.display_status(pct, u_bat, current, temperature, speed)
 
-        # Print til konsollen
-        print("Battery:", round(u_bat, 2), "V |", round(pct, 1), "% |","I:", round(current, 1), "mA |","Temp:", temperature, "C")
+        speed_print = round(speed, 2) if speed is not None else None
+
+        print("Battery:", round(u_bat, 2), "V |", round(pct, 1), "% |", "I:", round(current, 1), "mA |", "Temp:", temperature, "C |","Speed:", speed_print)
