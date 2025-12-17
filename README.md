@@ -1,6 +1,6 @@
-# Smartcykel — IoT Projekt #1
+# SmartRide — IoT Projekt #1
 
-**Denne repository indeholder al kode og dokumentation for vores IoT-projekt "Smartcykel".**
+**Denne repository indeholder al kode og dokumentation for vores IoT-projekt "SmartRide".**
 
 ## Om projektet
 
@@ -8,8 +8,7 @@ Smartcykel-projektet har til formål at udvikle en IoT-løsning, der kan monitor
 
 ## Funktionalitet
 
-- Opsamling af sensor-data (fx hastighed, temperatur, GPS m.m.)
-- Dataoverførsel til skyen/server via MQTT eller anden protokol
-- Visualisering af data (dashboard/webapp)
-- Mulighed for notifikationer/alarmer ved uregelmæssigheder
-- Lagring af historiske data
+* Opsamling af sensor-data (fx hastighed, temperatur, GPS m.m.)
+* Dataoverførsel til skyen/server via MQTT
+* Visualisering af data (dashboard/thingsboard)
+* Mulighed for notifikationer/alarmer ved uregelmæssigheder
